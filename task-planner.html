@@ -14,8 +14,9 @@
     --text: #1a1a1a;
     --muted: #767676;
     --accent: #d97706;
+    --danger: #dc2626;
     --radius: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(177, 105, 105, 0.04);
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
   }
   body {
     font-family: 'DM Sans', sans-serif;
@@ -42,6 +43,22 @@
   }
   h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
   .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 2rem; line-height: 1.55; }
+  .api-key-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .api-key-bar label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .api-key-row { display: flex; gap: 8px; align-items: center; }
+  .api-key-row input { flex: 1; }
+  .api-key-hint { font-size: 11px; color: var(--muted); }
+  .api-key-hint a { color: var(--accent); }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -50,7 +67,6 @@
     box-shadow: var(--shadow);
     margin-bottom: 1rem;
   }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
   .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
   .field:last-child { margin-bottom: 0; }
@@ -90,6 +106,7 @@
   .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; font-size: 12px; }
   .btn-ghost:hover { border-color: #c0c0b8; color: var(--text); }
+  .btn-sm { padding: 8px 14px; font-size: 12px; white-space: nowrap; }
   .output-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -115,22 +132,8 @@
   .dot:nth-child(3) { animation-delay: 0.4s; }
   @keyframes pulse { 0%,80%,100%{opacity:0.2}40%{opacity:1} }
   .disclaimer { margin-top: 1rem; padding: 10px 14px; border-radius: 8px; border: 1px solid #fde68a; background: #fffbeb; font-size: 12px; color: #92400e; line-height: 1.6; }
-  .error { border-color: #fca5a5; background: #fef2f2; color: #dc2626; padding: 12px 16px; border-radius: 8px; font-size: 13px; }
-  .priority-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-  .chip {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    cursor: pointer;
-    color: var(--muted);
-    transition: all 0.12s;
-    user-select: none;
-  }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-  .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
-  @media (max-width: 500px) { .form-row, .form-row3 { grid-template-columns: 1fr; } }
+  .error { color: var(--danger); padding: 12px 16px; border-radius: 8px; font-size: 13px; border: 1px solid #fca5a5; background: #fef2f2; }
+  @media (max-width: 500px) { .form-row3 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -141,7 +144,16 @@
 </nav>
 
 <h1>📅 AI Task Planner</h1>
-<p class="subtitle">List your tasks and Claude will build a prioritized, time-blocked schedule with tips to maximize your day.</p>
+<p class="subtitle">List your tasks and Gemini will build a prioritized, time-blocked schedule with tips to maximize your day.</p>
+
+<div class="api-key-bar">
+  <label for="api-key">Gemini API Key</label>
+  <div class="api-key-row">
+    <input type="password" id="api-key" placeholder="Paste your Gemini API key here…" />
+    <button class="btn btn-ghost btn-sm" onclick="toggleKey()">Show</button>
+  </div>
+  <span class="api-key-hint">Free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> · Your key stays in your browser only</span>
+</div>
 
 <div class="card">
   <div class="field">
@@ -180,8 +192,8 @@
     </div>
   </div>
 
-  <div class="field" style="margin-top:16px;margin-bottom:0">
-    <label>Extra context (optional)</label>
+  <div class="field" style="margin-top:16px; margin-bottom:0">
+    <label for="context">Extra context (optional)</label>
     <input type="text" id="context" placeholder="e.g. I have a 2pm meeting I can't move, prefer no meetings before 9:30am">
   </div>
 
@@ -205,20 +217,55 @@
 </div>
 
 <script>
-  const API_URL = 'https://api.anthropic.com/v1/messages';
-  const MODEL = 'claude-sonnet-4-20250514';
+  const GEMINI_MODEL = 'gemini-2.0-flash';
+
+  function getApiKey() {
+    return document.getElementById('api-key').value.trim();
+  }
+
+  function toggleKey() {
+    const input = document.getElementById('api-key');
+    const btn = event.currentTarget;
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = 'Hide';
+    } else {
+      input.type = 'password';
+      btn.textContent = 'Show';
+    }
+  }
 
   const tasksEl = document.getElementById('tasks');
   const countEl = document.getElementById('task-count');
-
   tasksEl.addEventListener('input', () => {
     const lines = tasksEl.value.split('\n').filter(l => l.trim().length > 0);
     countEl.textContent = lines.length + ' task' + (lines.length !== 1 ? 's' : '') + ' entered';
   });
 
+  async function callGemini(prompt) {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('NO_KEY');
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { maxOutputTokens: 1000, temperature: 0.6 }
+      })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message || 'API error');
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+  }
+
   async function generatePlan() {
     const tasks = document.getElementById('tasks').value.trim();
     if (!tasks) { alert('Please enter at least one task.'); return; }
+    if (!getApiKey()) { alert('Please enter your Gemini API key at the top of the page.'); return; }
 
     const planType = document.getElementById('plan-type').value;
     const workHours = document.getElementById('work-hours').value;
@@ -232,7 +279,7 @@
     btn.disabled = true;
     btn.textContent = 'Planning your day…';
     card.style.display = 'block';
-    body.innerHTML = `<div class="loading"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>Claude is organizing your tasks…</div>`;
+    body.innerHTML = `<div class="loading"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>Gemini is organizing your tasks…</div>`;
 
     const prompt = `You are a productivity coach and scheduling assistant. Create a structured ${planType} from the tasks below.
 
@@ -244,31 +291,26 @@ Tasks provided:
 ${tasks}
 
 Instructions:
-1. Prioritize tasks by urgency and importance (use an Eisenhower-style approach internally)
+1. Prioritize tasks by urgency and importance
 2. Assign realistic time blocks to each task (be specific with times, e.g. 8:00am – 9:30am)
 3. Group similar or related tasks together where it makes sense
 4. Include a short break mid-morning and lunch where appropriate
 5. End with 3 brief but practical productivity tips relevant to this specific task list
 
 Format clearly with time slots. Use emojis sparingly for section headers only.
-
 Output ONLY the schedule and tips. No preamble, no commentary, no markdown code blocks.`;
 
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: MODEL,
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-      const data = await response.json();
-      const text = data.content?.[0]?.text || 'No response received.';
+      const text = await callGemini(prompt);
       body.textContent = text;
     } catch (err) {
-      body.innerHTML = `<div class="error">Something went wrong. Please check your connection and try again.</div>`;
+      if (err.message === 'NO_KEY') {
+        body.innerHTML = `<div class="error">Please enter your Gemini API key at the top of the page.</div>`;
+      } else if (err.message.includes('API_KEY_INVALID') || err.message.includes('invalid')) {
+        body.innerHTML = `<div class="error">Invalid API key. Please check your key at aistudio.google.com and try again.</div>`;
+      } else {
+        body.innerHTML = `<div class="error">Something went wrong: ${err.message}. Please check your API key and connection.</div>`;
+      }
     } finally {
       btn.disabled = false;
       btn.textContent = '✦ Generate my plan';

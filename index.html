@@ -13,7 +13,7 @@
     --border: #e4e4e0;
     --text: #1a1a1a;
     --muted: #767676;
-    --accent: #2563eb;
+    --accent: #1a73e8;
     --radius: 12px;
     --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
   }
@@ -42,6 +42,22 @@
   .hero { text-align: center; max-width: 460px; margin-bottom: 3rem; }
   .hero h1 { font-size: 34px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 14px; }
   .hero p { font-size: 15px; color: var(--muted); line-height: 1.65; }
+  .powered {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-top: 14px;
+  }
+  .gemini-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: linear-gradient(135deg, #4285f4, #ea4335, #fbbc04, #34a853);
+  }
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -67,38 +83,67 @@
   .card h2 { font-size: 16px; font-weight: 600; }
   .card p { font-size: 13px; color: var(--muted); line-height: 1.6; flex: 1; }
   .card-cta { font-size: 13px; font-weight: 500; color: var(--accent); margin-top: 6px; }
+  .setup-banner {
+    width: 100%;
+    max-width: 840px;
+    margin-bottom: 20px;
+    background: #e8f0fe;
+    border: 1px solid #c5d8fd;
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    font-size: 13px;
+    color: #1a4db5;
+    line-height: 1.6;
+  }
+  .setup-banner strong { font-weight: 600; }
+  .setup-banner a { color: #1a4db5; font-weight: 500; }
   .footer { margin-top: 4rem; font-size: 12px; color: var(--muted); text-align: center; line-height: 2; }
 </style>
 </head>
 <body>
-  <div class="label">CAPACITI · AI Skill Accelerator Programme</div>
-  <div class="hero">
-    <h1>AI Productivity Assistant</h1>
-    <p>Three AI-powered tools to automate your everyday workplace tasks — built with the Anthropic Claude API.</p>
+
+<div class="label">CAPACITI · AI Skill Accelerator Programme</div>
+
+<div class="hero">
+  <h1>AI Productivity Assistant</h1>
+  <p>Three AI-powered tools to automate your everyday workplace tasks.</p>
+  <div class="powered">
+    <div class="gemini-dot"></div>
+    Powered by Google Gemini API
   </div>
-  <div class="cards">
-    <a class="card" href="email-generator.html">
-      <div class="card-icon">✉️</div>
-      <h2>Smart Email Generator</h2>
-      <p>Draft professional, context-aware emails in seconds. Set your tone, audience, and purpose — Claude writes it.</p>
-      <span class="card-cta">Open tool →</span>
-    </a>
-    <a class="card" href="meeting-summarizer.html">
-      <div class="card-icon">📋</div>
-      <h2>Meeting Notes Summarizer</h2>
-      <p>Turn messy raw notes into a clean summary with key decisions, action items, and follow-ups extracted.</p>
-      <span class="card-cta">Open tool →</span>
-    </a>
-    <a class="card" href="task-planner.html">
-      <div class="card-icon">📅</div>
-      <h2>AI Task Planner</h2>
-      <p>List your tasks and get a prioritized, time-blocked daily or weekly schedule with productivity tips.</p>
-      <span class="card-cta">Open tool →</span>
-    </a>
-  </div>
-  <div class="footer">
-    Powered by Anthropic Claude API &nbsp;·&nbsp; CAPACITI AI Skill Accelerator<br>
-    Always review AI-generated content before use in professional settings.
-  </div>
+</div>
+
+<div class="setup-banner">
+  <strong>🔑 First time setup:</strong> You need a free Gemini API key to use these tools.
+  Get yours at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> — no credit card required.
+  Then paste your key when prompted on each tool page.
+</div>
+
+<div class="cards">
+  <a class="card" href="email-generator.html">
+    <div class="card-icon">✉️</div>
+    <h2>Smart Email Generator</h2>
+    <p>Draft professional, context-aware emails in seconds. Set your tone, audience, and purpose — Gemini writes it.</p>
+    <span class="card-cta">Open tool →</span>
+  </a>
+  <a class="card" href="meeting-summarizer.html">
+    <div class="card-icon">📋</div>
+    <h2>Meeting Notes Summarizer</h2>
+    <p>Turn messy raw notes into a clean summary with key decisions, action items, and follow-ups extracted.</p>
+    <span class="card-cta">Open tool →</span>
+  </a>
+  <a class="card" href="task-planner.html">
+    <div class="card-icon">📅</div>
+    <h2>AI Task Planner</h2>
+    <p>List your tasks and get a prioritized, time-blocked daily or weekly schedule with productivity tips.</p>
+    <span class="card-cta">Open tool →</span>
+  </a>
+</div>
+
+<div class="footer">
+  Powered by Google Gemini API &nbsp;·&nbsp; CAPACITI AI Skill Accelerator<br>
+  Always review AI-generated content before use in professional settings.
+</div>
+
 </body>
 </html>
