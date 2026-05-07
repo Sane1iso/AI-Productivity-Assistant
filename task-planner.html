@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Task Planner · AI Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --border: #e4e4e0;
+    --text: #1a1a1a;
+    --muted: #767676;
+    --accent: #d97706;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(177, 105, 105, 0.04);
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1.5rem 4rem;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; }
+  nav a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+  nav a:hover { color: var(--text); }
+  nav .page-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 2rem; line-height: 1.55; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .form-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: #fff; }
+  textarea { resize: vertical; min-height: 130px; line-height: 1.75; }
+  .task-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; font-size: 12px; }
+  .btn-ghost:hover { border-color: #c0c0b8; color: var(--text); }
+  .output-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: none;
+  }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .output-header span { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .output-body { padding: 24px; font-size: 14px; line-height: 1.8; white-space: pre-wrap; color: var(--text); min-height: 60px; }
+  .loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; padding: 20px 24px; }
+  .dots { display: flex; gap: 4px; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: pulse 1.3s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:0.2}40%{opacity:1} }
+  .disclaimer { margin-top: 1rem; padding: 10px 14px; border-radius: 8px; border: 1px solid #fde68a; background: #fffbeb; font-size: 12px; color: #92400e; line-height: 1.6; }
+  .error { border-color: #fca5a5; background: #fef2f2; color: #dc2626; padding: 12px 16px; border-radius: 8px; font-size: 13px; }
+  .priority-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.12s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  @media (max-width: 500px) { .form-row, .form-row3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">← Back to home</a>
+  <span class="page-label">Tool 3 of 3</span>
+</nav>
+
+<h1>📅 AI Task Planner</h1>
+<p class="subtitle">List your tasks and Claude will build a prioritized, time-blocked schedule with tips to maximize your day.</p>
+
+<div class="card">
+  <div class="field">
+    <label for="tasks">Your tasks <span style="color:#dc2626">*</span></label>
+    <textarea id="tasks" placeholder="Enter each task on its own line. Be as specific or brief as you like.&#10;&#10;Example:&#10;Submit monthly report to manager&#10;Reply to client emails&#10;Prepare slides for Friday presentation&#10;Review budget spreadsheet&#10;Team meeting at 2pm&#10;Lunch with Naledi at 1pm"></textarea>
+    <span class="task-hint" id="task-count">0 tasks entered</span>
+  </div>
+
+  <div class="form-row3">
+    <div class="field" style="margin-bottom:0">
+      <label for="plan-type">Plan type</label>
+      <select id="plan-type">
+        <option>Daily plan</option>
+        <option>Weekly plan</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label for="work-hours">Work hours</label>
+      <select id="work-hours">
+        <option>8am – 5pm</option>
+        <option>9am – 6pm</option>
+        <option>7am – 3pm</option>
+        <option>8am – 4pm</option>
+        <option>Flexible hours</option>
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label for="focus-style">Focus style</label>
+      <select id="focus-style">
+        <option>Deep work first</option>
+        <option>Quick wins first</option>
+        <option>Deadline-driven</option>
+        <option>Balanced mix</option>
+        <option>Energy-based</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field" style="margin-top:16px;margin-bottom:0">
+    <label>Extra context (optional)</label>
+    <input type="text" id="context" placeholder="e.g. I have a 2pm meeting I can't move, prefer no meetings before 9:30am">
+  </div>
+
+  <div style="margin-top:20px">
+    <button class="btn btn-primary" id="plan-btn" onclick="generatePlan()">
+      ✦ Generate my plan
+    </button>
+  </div>
+</div>
+
+<div class="output-card" id="output-card">
+  <div class="output-header">
+    <span>Your schedule</span>
+    <button class="btn btn-ghost" onclick="copyOutput()">Copy</button>
+  </div>
+  <div class="output-body" id="output-body"></div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ Time estimates are approximate. Adjust your schedule based on your actual energy levels and workload.
+</div>
+
+<script>
+  const API_URL = 'https://api.anthropic.com/v1/messages';
+  const MODEL = 'claude-sonnet-4-20250514';
+
+  const tasksEl = document.getElementById('tasks');
+  const countEl = document.getElementById('task-count');
+
+  tasksEl.addEventListener('input', () => {
+    const lines = tasksEl.value.split('\n').filter(l => l.trim().length > 0);
+    countEl.textContent = lines.length + ' task' + (lines.length !== 1 ? 's' : '') + ' entered';
+  });
+
+  async function generatePlan() {
+    const tasks = document.getElementById('tasks').value.trim();
+    if (!tasks) { alert('Please enter at least one task.'); return; }
+
+    const planType = document.getElementById('plan-type').value;
+    const workHours = document.getElementById('work-hours').value;
+    const focusStyle = document.getElementById('focus-style').value;
+    const context = document.getElementById('context').value.trim();
+
+    const btn = document.getElementById('plan-btn');
+    const card = document.getElementById('output-card');
+    const body = document.getElementById('output-body');
+
+    btn.disabled = true;
+    btn.textContent = 'Planning your day…';
+    card.style.display = 'block';
+    body.innerHTML = `<div class="loading"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>Claude is organizing your tasks…</div>`;
+
+    const prompt = `You are a productivity coach and scheduling assistant. Create a structured ${planType} from the tasks below.
+
+Work hours: ${workHours}
+Scheduling approach: ${focusStyle}
+${context ? 'Additional context: ' + context : ''}
+
+Tasks provided:
+${tasks}
+
+Instructions:
+1. Prioritize tasks by urgency and importance (use an Eisenhower-style approach internally)
+2. Assign realistic time blocks to each task (be specific with times, e.g. 8:00am – 9:30am)
+3. Group similar or related tasks together where it makes sense
+4. Include a short break mid-morning and lunch where appropriate
+5. End with 3 brief but practical productivity tips relevant to this specific task list
+
+Format clearly with time slots. Use emojis sparingly for section headers only.
+
+Output ONLY the schedule and tips. No preamble, no commentary, no markdown code blocks.`;
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await response.json();
+      const text = data.content?.[0]?.text || 'No response received.';
+      body.textContent = text;
+    } catch (err) {
+      body.innerHTML = `<div class="error">Something went wrong. Please check your connection and try again.</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✦ Generate my plan';
+    }
+  }
+
+  function copyOutput() {
+    const text = document.getElementById('output-body').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.currentTarget;
+      btn.textContent = 'Copied ✓';
+      setTimeout(() => btn.textContent = 'Copy', 1800);
+    });
+  }
+</script>
+
+</body>
+</html>
