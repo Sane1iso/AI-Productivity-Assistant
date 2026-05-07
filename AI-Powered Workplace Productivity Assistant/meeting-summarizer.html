@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meeting Notes Summarizer · AI Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --border: #e4e4e0;
+    --text: #1a1a1a;
+    --muted: #767676;
+    --accent: #059669;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.04);
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1.5rem 4rem;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; }
+  nav a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+  nav a:hover { color: var(--text); }
+  nav .page-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 2rem; line-height: 1.55; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  input, select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.15s;
+    appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: #fff; }
+  textarea { resize: vertical; min-height: 150px; line-height: 1.65; }
+  .char-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; font-size: 12px; }
+  .btn-ghost:hover { border-color: #c0c0b8; color: var(--text); }
+  .output-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: none;
+  }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .output-header span { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .output-body { padding: 24px; font-size: 14px; line-height: 1.75; white-space: pre-wrap; color: var(--text); min-height: 60px; }
+  .loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; padding: 20px 24px; }
+  .dots { display: flex; gap: 4px; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: pulse 1.3s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,80%,100%{opacity:0.2}40%{opacity:1} }
+  .disclaimer { margin-top: 1rem; padding: 10px 14px; border-radius: 8px; border: 1px solid #fde68a; background: #fffbeb; font-size: 12px; color: #92400e; line-height: 1.6; }
+  .error { border-color: #fca5a5; background: #fef2f2; color: #dc2626; padding: 12px 16px; border-radius: 8px; font-size: 13px; }
+  @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html">← Back to home</a>
+  <span class="page-label">Tool 2 of 3</span>
+</nav>
+
+<h1>📋 Meeting Notes Summarizer</h1>
+<p class="subtitle">Paste your raw meeting notes below — bullet points, transcripts, or voice-to-text — and get a structured summary.</p>
+
+<div class="card">
+  <div class="field">
+    <label for="notes">Raw meeting notes <span style="color:#dc2626">*</span></label>
+    <textarea id="notes" placeholder="Paste your meeting notes here. Any format works — bullet points, full sentences, messy transcripts, etc.&#10;&#10;Example:&#10;- Project deadline moved to June 30&#10;- John to send updated wireframes by Friday&#10;- Budget approved at R150k&#10;- Need to follow up with the client about branding..."></textarea>
+    <span class="char-hint" id="char-hint">0 characters</span>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label for="meeting-type">Meeting type</label>
+      <select id="meeting-type">
+        <option>General meeting</option>
+        <option>Team standup</option>
+        <option>Client meeting</option>
+        <option>Project planning</option>
+        <option>Strategy session</option>
+        <option>Performance review</option>
+        <option>Brainstorming session</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="summary-style">Summary style</label>
+      <select id="summary-style">
+        <option>Concise bullet points</option>
+        <option>Detailed paragraphs</option>
+        <option>Executive one-pager</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field" style="margin-bottom:0">
+    <label for="attendees">Attendees (optional)</label>
+    <input type="text" id="attendees" placeholder="e.g. Sipho, Naledi, James (PM), Client rep">
+  </div>
+
+  <div style="margin-top:20px">
+    <button class="btn btn-primary" id="summarize-btn" onclick="summarizeMeeting()">
+      ✦ Summarize notes
+    </button>
+  </div>
+</div>
+
+<div class="output-card" id="output-card">
+  <div class="output-header">
+    <span>Meeting summary</span>
+    <button class="btn btn-ghost" onclick="copyOutput()">Copy</button>
+  </div>
+  <div class="output-body" id="output-body"></div>
+</div>
+
+<div class="disclaimer">
+  ⚠️ Verify all action items and deadlines with attendees before distributing this summary.
+</div>
+
+<script>
+  const API_URL = 'https://api.anthropic.com/v1/messages';
+  const MODEL = 'claude-sonnet-4-20250514';
+
+  const notesEl = document.getElementById('notes');
+  const hint = document.getElementById('char-hint');
+  notesEl.addEventListener('input', () => {
+    hint.textContent = notesEl.value.length + ' characters';
+  });
+
+  async function summarizeMeeting() {
+    const notes = document.getElementById('notes').value.trim();
+    if (!notes) { alert('Please paste your meeting notes first.'); return; }
+    if (notes.length < 30) { alert('Please paste more detailed meeting notes for a useful summary.'); return; }
+
+    const meetingType = document.getElementById('meeting-type').value;
+    const style = document.getElementById('summary-style').value;
+    const attendees = document.getElementById('attendees').value.trim();
+
+    const btn = document.getElementById('summarize-btn');
+    const card = document.getElementById('output-card');
+    const body = document.getElementById('output-body');
+
+    btn.disabled = true;
+    btn.textContent = 'Summarizing…';
+    card.style.display = 'block';
+    body.innerHTML = `<div class="loading"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>Claude is reading your notes…</div>`;
+
+    const prompt = `You are a professional meeting notes summarizer. Summarize the following ${meetingType} notes clearly and concisely.
+
+Summary style: ${style}
+${attendees ? 'Attendees: ' + attendees : ''}
+
+Structure your output with these clearly labeled sections:
+
+📋 SUMMARY
+(Brief overview of what the meeting was about)
+
+✅ KEY DECISIONS
+(Decisions that were made)
+
+📌 ACTION ITEMS
+(Who needs to do what, with deadlines if mentioned)
+
+⏭️ FOLLOW-UPS / NEXT STEPS
+(Outstanding items or things to watch)
+
+Raw meeting notes:
+${notes}
+
+Be accurate and concise. Extract only what matters. Do not add anything not mentioned in the notes. Output ONLY the structured summary — no preamble, no commentary.`;
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: MODEL,
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await response.json();
+      const text = data.content?.[0]?.text || 'No response received.';
+      body.textContent = text;
+    } catch (err) {
+      body.innerHTML = `<div class="error">Something went wrong. Please check your connection and try again.</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '✦ Summarize notes';
+    }
+  }
+
+  function copyOutput() {
+    const text = document.getElementById('output-body').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = event.currentTarget;
+      btn.textContent = 'Copied ✓';
+      setTimeout(() => btn.textContent = 'Copy', 1800);
+    });
+  }
+</script>
+
+</body>
+</html>
